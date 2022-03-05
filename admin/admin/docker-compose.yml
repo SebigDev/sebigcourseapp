@@ -1,0 +1,34 @@
+version: "3.9"
+services:
+  postgresdb:
+    container_name: postgresdb
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=admin
+    image: postgres
+    volumes: 
+    - ./data-postgres:/data/db
+    restart: always
+  
+  sebigadminapp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: "python manage.py runserver 0.0.0.0:8000"
+    container_name: sebigadminapp
+    volumes:
+      - .:/app
+    ports:
+      - "8001:8000"
+    depends_on:
+      - postgresdb
+
+  queue:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: "python consumer.py"
+    container_name: queue
+    depends_on:
+      - postgresdb
